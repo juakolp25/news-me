@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noticias del Día</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: #1a73e8;
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .last-update {
+            font-style: italic;
+            font-size: 0.9rem;
+        }
+        
+        .refresh-btn {
+            background-color: #fff;
+            color: #1a73e8;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+            transition: background-color 0.3s;
+        }
+        
+        .refresh-btn:hover {
+            background-color: #f0f0f0;
+        }
+        
+        .news-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .news-card {
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .news-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .news-image {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+        }
+        
+        .news-content {
+            padding: 15px;
+        }
+        
+        .news-title {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: #1a73e8;
+        }
+        
+        .news-description {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 15px;
+        }
+        
+        .news-link {
+            display: inline-block;
+            color: #1a73e8;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        .news-link:hover {
+            text-decoration: underline;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.2rem;
+            color: #666;
+        }
+        
+        .error {
+            text-align: center;
+            padding: 40px;
+            color: #d32f2f;
+            background-color: #ffebee;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .news-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Noticias del Día</h1>
+            <p class="last-update">Última actualización: <span id="update-time">Cargando...</span></p>
+            <button class="refresh-btn" id="refresh-btn">Actualizar Noticias</button>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div id="news-container" class="news-container">
+            <div class="loading">Cargando noticias...</div>
+        </div>
+    </div>
+    
+    <footer>
+        <div class="container">
+            <p>Noticias proporcionadas por News API | Actualizado automáticamente</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const newsContainer = document.getElementById('news-container');
+            const updateTimeElement = document.getElementById('update-time');
+            const refreshButton = document.getElementById('refresh-btn');
+            
+            // Función para formatear la fecha
+            function formatDate(date) {
+                return new Intl.DateTimeFormat('es-ES', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                }).format(date);
+            }
+            
+            // Función para obtener noticias
+            async function fetchNews() {
+                try {
+                    newsContainer.innerHTML = '<div class="loading">Cargando noticias...</div>';
+                    
+                    // En una implementación real, deberías usar tu propia API key
+                    // Esta es una clave de ejemplo y puede no funcionar
+                    const apiKey = 'd06762d324354a60bc013ea9736752a7';
+                    const response = await fetch(`https://newsapi.org/v2/top-headlines?country=us&apiKey=${apiKey}`);
+                    
+                    if (!response.ok) {
+                        throw new Error('Error al cargar las noticias');
+                    }
+                    
+                    const data = await response.json();
+                    
+                    if (data.articles && data.articles.length > 0) {
+                        displayNews(data.articles);
+                    } else {
+                        throw new Error('No se encontraron noticias');
+                    }
+                    
+                    // Actualizar la hora de la última actualización
+                    updateTimeElement.textContent = formatDate(new Date());
+                } catch (error) {
+                    newsContainer.innerHTML = `
+                        <div class="error">
+                            <p>Error: ${error.message}</p>
+                            <p>Nota: Para que esta página funcione correctamente, necesitas obtener una API key gratuita de <a href="https://newsapi.org/" target="_blank">NewsAPI</a> y reemplazar "d06762d324354a60bc013ea9736752a7" en el código.</p>
+                        </div>
+                    `;
+                }
+            }
+            
+            // Función para mostrar las noticias
+            function displayNews(articles) {
+                newsContainer.innerHTML = '';
+                
+                articles.forEach(article => {
+                    if (!article.title || article.title === '[Removed]') return;
+                    
+                    const newsCard = document.createElement('div');
+                    newsCard.className = 'news-card';
+                    
+                    newsCard.innerHTML = `
+                        ${article.urlToImage ? `<img src="${article.urlToImage}" alt="${article.title}" class="news-image">` : ''}
+                        <div class="news-content">
+                            <h3 class="news-title">${article.title}</h3>
+                            ${article.description ? `<p class="news-description">${article.description}</p>` : ''}
+                            <a href="${article.url}" target="_blank" class="news-link">Leer noticia completa</a>
+                        </div>
+                    `;
+                    
+                    newsContainer.appendChild(newsCard);
+                });
+            }
+            
+            // Cargar noticias al iniciar
+            fetchNews();
+            
+            // Event listener para el botón de actualizar
+            refreshButton.addEventListener('click', fetchNews);
+        });
+    </script>
+</body>
+</html>
