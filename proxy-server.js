@@ -12,7 +12,7 @@ app.use(express.json());
 app.get('/news', async (req, res) => {
   try {
     const category = req.query.category || 'general';
-    const apiKey = 'd06762d324354a60bc013ea9736752a7';
+    const apiKey = 'keyApiNews';
     
     let url;
     
@@ -44,4 +44,5 @@ app.get('/news', async (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Proxy server running on http://localhost:${PORT}`);
+
 });
